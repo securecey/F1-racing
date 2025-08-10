@@ -63,12 +63,26 @@ th { background:#e10600; color:#fff; font-weight:700; text-align:left; }
 #timer { margin-top:8px; font-size:1.8rem; font-weight:700; color:#ffd2a6; }
 #download { padding:36px 20px; text-align:center; }
 
+/* Game area */
+.game-area { padding: 18px; }
+#gameCanvas {
+  background: #1c1c1c;
+  border: 4px solid #e10600;
+  border-radius: 10px;
+  display: block;
+  margin: 10px auto;
+  max-width: 100%;
+}
+.hud { text-align: center; margin-top: 8px; color: #ddd; display:flex; gap:12px; justify-content:center; align-items:center; }
+.hud .control { padding:6px 10px; }
+
 /* footer */
 footer { padding:16px; text-align:center; font-size:.9rem; color:#bbb; background:transparent; }
 
 /* Responsive tweaks */
-@media (max-width:700px) {
+@media (max-width:900px) {
   .hero h1 { font-size:2rem; }
-  .car { width:300px; bottom:10%; left:-60%; transform: scale(.9); }
+  .car { width:320px; bottom:10%; left:-60%; transform: scale(.9); }
   nav { padding:10px; }
+  #gameCanvas { width: 92%; height: auto; }
 }
