@@ -15,28 +15,24 @@
   </nav>
 
   <main>
+    <!-- HERO (will be replaced by canvas when Play clicked) -->
     <section id="home" class="hero">
       <div class="hero-inner">
         <h1>Feel the Speed!</h1>
         <p>Join the ultimate F1 racing experience</p>
-        <a href="#download" class="btn">Play Now</a>
+        <a href="#" id="play-btn" class="btn">Play Now</a>
       </div>
 
-      <!-- higher-fidelity inline SVG car (drop-in, scalable) -->
+      <!-- higher-fidelity inline SVG car (visual only) -->
       <div class="car" id="raceCar" aria-hidden="true">
         <svg viewBox="0 0 400 120" width="340" height="120" xmlns="http://www.w3.org/2000/svg" role="img">
-          <!-- body -->
           <g transform="translate(0,6)">
             <path d="M40 60 C60 20, 160 10, 240 18 C320 26, 360 62, 340 86 L300 86 L280 98 L70 98 L40 86 Z"
                   fill="#E10600" stroke="#b30000" stroke-width="3"/>
-            <!-- cockpit -->
             <path d="M155 28 C175 16, 210 16, 235 26 L235 40 C210 34, 180 34,155 40 Z" fill="#ffb3b3" />
-            <!-- stripes -->
             <path d="M60 62 L110 58 L170 62" stroke="#fff4e6" stroke-width="6" stroke-linecap="round" opacity="0.35"/>
-            <!-- rear wing -->
             <rect x="248" y="10" width="80" height="12" rx="3" fill="#9d0000"/>
             <rect x="248" y="6" width="20" height="6" rx="2" fill="#7a0000"/>
-            <!-- wheels -->
             <g fill="#0b0b0b">
               <circle cx="100" cy="92" r="14"/>
               <circle cx="270" cy="92" r="14"/>
@@ -45,7 +41,6 @@
               <circle cx="100" cy="92" r="7"/>
               <circle cx="270" cy="92" r="7"/>
             </g>
-            <!-- exhaust glow (will animate opacity) -->
             <ellipse id="exhaust" cx="325" cy="60" rx="10" ry="6" fill="#ff8c00" opacity="0.0"/>
           </g>
         </svg>
@@ -54,11 +49,21 @@
       <div class="hero-overlay"></div>
     </section>
 
+    <!-- Game Canvas Section (hidden initially) -->
+    <section id="game-section" class="game-area" style="display:none; text-align:center;">
+      <canvas id="gameCanvas" width="1000" height="560"></canvas>
+      <div class="hud">
+        <span id="speedDisplay">Speed: 0</span> •
+        <span id="lapDisplay">Lap: 0</span> •
+        <button id="exitGame" class="control">Exit Game</button>
+      </div>
+    </section>
+
     <section id="features">
       <h2>Game Features</h2>
       <div class="feature-grid">
         <div class="card">🏁 Realistic Physics</div>
-        <div class="card">🌍 Multiplayer Mode</div>
+        <div class="card">🌍 Multiplayer Mode (Planned)</div>
         <div class="card">🚗 Custom Cars</div>
         <div class="card">🏆 Global Tournaments</div>
       </div>
