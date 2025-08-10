@@ -1,136 +1,114 @@
-// ========== Mock leaderboard ==========
+// ----------------------- Data & DOM -----------------------
 const leaderboard = [
-  { rank: 1, player: "SpeedRacer", score: 9800 },
-  { rank: 2, player: "NitroKing", score: 9450 },
-  { rank: 3, player: "DriftMaster", score: 9100 },
-  { rank: 4, player: "TurboFlash", score: 8900 }
+  { id: 'p1', rank: 1, player: "SpeedRacer", score: 9800 },
+  { id: 'p2', rank: 2, player: "NitroKing", score: 9450 },
+  { id: 'p3', rank: 3, player: "DriftMaster", score: 9100 },
+  { id: 'p4', rank: 4, player: "TurboFlash", score: 8900 }
 ];
 
 const tbody = document.getElementById("leaderboard-data");
-leaderboard.forEach(item => {
-  const tr = document.createElement("tr");
-  tr.innerHTML = `<td>${item.rank}</td>
-                  <td>${item.player}</td>
-                  <td class="score" data-score="${item.score}">0</td>`;
-  tbody.appendChild(tr);
-});
+const muteBtn = document.getElementById("muteBtn");
+let audioEnabled = true;
 
-// Animate score count-up using GSAP (once DOM is ready)
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.gsap) {
-    // animate scores from 0 -> data-score
-    document.querySelectorAll(".score").forEach(el => {
-      const target = +el.dataset.score;
-      gsap.to({ val: 0 }, {
-        val: target,
-        duration: 1.6,
-        ease: "power3.out",
-        onUpdate() {
-          el.textContent = Math.floor(this.targets()[0].val).toLocaleString();
-        }
-      });
-    });
-  }
-});
-
-// ========== Countdown timer (1 hour from load) ==========
-let countdownTime = new Date().getTime() + 60 * 60 * 1000;
-function updateTimer() {
-  const now = Date.now();
-  const d = countdownTime - now;
-  if (d <= 0) { document.getElementById("timer").innerText = "Race Started!"; return; }
-  const hrs = Math.floor((d / (1000 * 60 * 60)) % 24);
-  const mins = Math.floor((d / (1000 * 60)) % 60);
-  const secs = Math.floor((d / 1000) % 60);
-  document.getElementById("timer").innerText =
-    `${String(hrs).padStart(2,"0")}:${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`;
-}
-setInterval(updateTimer, 1000);
-updateTimer();
-
-// ========== GSAP Animations (car + parallax + leaderboard pulse) ==========
-function initAnimations() {
-  if (!window.gsap || !window.ScrollTrigger) return;
-
-  gsap.registerPlugin(ScrollTrigger);
-
-  // Parallax: shift background position slightly on scroll
-  gsap.to(".hero", {
-    backgroundPosition: "50% 30%",
-    ease: "none",
-    scrollTrigger: {
-      trigger: ".hero",
-      start: "top top",
-      end: "bottom top",
-      scrub: 0.8
-    }
+// render initial leaderboard rows
+function renderLeaderboard() {
+  tbody.innerHTML = '';
+  leaderboard.sort((a,b)=> a.rank - b.rank).forEach(item => {
+    const tr = document.createElement("tr");
+    tr.id = item.id;
+    tr.innerHTML = `<td>${item.rank}</td><td>${item.player}</td><td class="score" data-score="${item.score}">${item.score.toLocaleString()}</td>`;
+    tbody.appendChild(tr);
   });
+}
+renderLeaderboard();
 
-  // Car zips across the screen while scrolling past hero
+// ----------------------- GSAP entrance timeline -----------------------
+function entranceAnimation() {
+  if (!window.gsap) return;
   const car = document.getElementById("raceCar");
-  gsap.fromTo(car, { xPercent: -120, yPercent: 0, scale: 0.9 }, {
-    xPercent: 220,
-    ease: "none",
-    scrollTrigger: {
-      trigger: ".hero",
-      start: "top center",
-      end: "bottom top",
-      scrub: 0.9
-    }
-  });
+  const exhaust = document.getElementById("exhaust");
 
-  // Add a tiny floating/bounce to car to suggest motion
-  gsap.to(car, {
-    y: "-=6",
-    duration: 0.6,
-    yoyo: true,
-    repeat: -1,
-    ease: "sine.inOut",
-    delay: 0.1
-  });
+  const tl = gsap.timeline();
 
-  // Subtle leaderboard row highlight when entering viewport
-  gsap.utils.toArray("#leaderboard tbody tr").forEach((row, i) => {
-    gsap.from(row, {
-      opacity: 0,
-      y: 12,
-      duration: 0.6,
-      delay: i * 0.06,
-      scrollTrigger: {
-        trigger: row,
-        start: "top 85%"
-      }
-    });
-  });
+  // start small and offscreen with quiet engine -> rev up + zip in
+  gsap.set(car, { xPercent: -140, scale: 0.9, rotation: -2 });
+  gsap.set(exhaust, { opacity: 0 });
 
-  // small pulse on Play button when hero is visible
-  gsap.to(".btn", {
-    scale: 1.03,
-    repeat: -1,
-    yoyo: true,
-    duration: 1.8,
-    ease: "sine.inOut",
-    scrollTrigger: {
-      trigger: ".hero",
-      start: "top top",
-      end: "bottom top"
-    }
-  });
+  // small engine idle pulsing before launch
+  tl.to(exhaust, { opacity: 0.18, duration: 0.25, yoyo: true, repeat: 1 });
+
+  // rev sound ramp + quick zoom-in entrance
+  tl.to(car, {
+    duration: 1.2,
+    xPercent: 16,
+    scale: 1,
+    rotation: 0,
+    ease: "power4.out",
+    onStart() { audioEngine.rampUp(); }
+  }, "-=0.2");
+
+  // exhaust flash + small bounce
+  tl.to(exhaust, { opacity: 0.9, duration: 0.12, yoyo: true, repeat: 1 }, "-=0.3");
+  tl.to(car, { y: "-=6", duration: 0.18, yoyo: true, repeat: 5, ease: "sine.inOut" }, "-=0.9");
+
+  // after entrance, settle engine to cruising
+  tl.call(()=> audioEngine.setCruise(), null, "-=0.2");
 }
+window.addEventListener("load", entranceAnimation);
 
-// Wait a tick to ensure GSAP loaded
-window.addEventListener("load", () => {
-  // If gsap hasn't loaded from CDN yet, poll for it
-  const maxTries = 50;
-  let tries = 0;
-  const t = setInterval(() => {
-    tries++;
-    if (window.gsap && window.ScrollTrigger) {
-      clearInterval(t);
-      initAnimations();
-    } else if (tries > maxTries) {
-      clearInterval(t);
-      console.warn("GSAP not available — animations disabled.");
+// ----------------------- WebAudio engine & tire (synthesized) -----------------------
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const masterGain = audioCtx.createGain();
+masterGain.gain.value = 0.62;
+masterGain.connect(audioCtx.destination);
+
+const audioEngine = (function () {
+  // simple engine: two oscillators (low hum) + distortion + filter for 'growl'
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+  const waveshaper = audioCtx.createWaveShaper();
+
+  osc1.type = 'sawtooth';
+  osc2.type = 'sine';
+  osc1.frequency.value = 60;
+  osc2.frequency.value = 120;
+  gain.gain.value = 0.0001; // start almost silent
+
+  filter.type = 'lowpass';
+  filter.frequency.value = 800;
+  filter.Q.value = 1;
+
+  // soft distortion curve
+  function makeDistortion(amount) {
+    const k = typeof amount === 'number' ? amount : 50;
+    const n = 44100;
+    const curve = new Float32Array(n);
+    const deg = Math.PI / 180;
+    for (let i = 0; i < n; ++i) {
+      const x = (i * 2) / n - 1;
+      curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
     }
-  }, 50);
-});
+    return curve;
+  }
+  waveshaper.curve = makeDistortion(6);
+  waveshaper.oversample = '2x';
+
+  // connect chain: osc -> gain -> filter -> waveshaper -> master
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(filter);
+  filter.connect(waveshaper);
+  waveshaper.connect(masterGain);
+
+  osc1.start();
+  osc2.start();
+
+  // public API
+  return {
+    rampUp(duration = 0.9) {
+      // ramp oscillator frequencies and gain to simulate rev
+      const now = audioCtx.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(gain.gain.value, now);
